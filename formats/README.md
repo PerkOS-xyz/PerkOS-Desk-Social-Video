@@ -10,4 +10,4 @@ The desk's X cap is 260 in the same weighted units as the platform limit. A null
 - TikTok documents API upload limits and Direct Post captions. Its camera tools help page returned no readable content. [Media Transfer Guide](https://developers.tiktok.com/docs/en/content-posting-api-media-transfer-guide), [Direct Post](https://developers.tiktok.com/docs/en/content-posting-api-reference-direct-post), [Camera tools](https://support.tiktok.com/en/using-tiktok/creating-videos/camera-tools)
 - Meta documents Reel uploads, Feed sharing, and captions. Instagram's Help Center rate-limited the Reel format page. [Instagram API media reference](https://developers.facebook.com/documentation/instagram-platform/instagram-graph-api/reference/ig-user/media), [Reel size help](https://help.instagram.com/1631821640426723)
 
-Run the format test with `node --test formats/formats.test.mjs`.
+From the repository root, run `npm ci`, `npm run typecheck`, and `npm test`.

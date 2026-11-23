@@ -2,16 +2,19 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
+/** @param {unknown} value @param {string} field */
 function positiveInteger(value, field) {
-  assert.ok(Number.isInteger(value) && value > 0, field);
+  assert.ok(typeof value === 'number' && Number.isInteger(value) && value > 0, field);
 }
 
+/** @param {unknown} value @param {string} field */
 function nonemptyString(value, field) {
   assert.ok(typeof value === 'string' && value.trim().length > 0, field);
 }
 
+/** @param {unknown} value @param {string} field */
 function verification(value, field) {
-  assert.ok(['verified', 'unverified'].includes(value), field);
+  assert.ok(value === 'verified' || value === 'unverified', field);
 }
 
 for (const network of ['x', 'tiktok', 'instagram']) {

@@ -1,0 +1,12 @@
+{
+  "name": "perkos-desk-social-video",
+  "private": true,
+  "scripts": {
+    "typecheck": "tsc --ignoreConfig --noEmit --allowJs --checkJs --strict --module nodenext --target es2022 --types node formats/formats.test.mjs",
+    "test": "node --test"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "typescript": "6.0.3"
+  }
+}
