@@ -1,0 +1,92 @@
+{
+  "id": "social-video",
+  "format": 1,
+  "version": "1.0.0",
+  "tier": "public",
+  "name": "Social Video",
+  "description": "Turn real product screens into short videos and posts for X, TikTok, and Instagram.",
+  "sparky": {
+    "greeting": "Set up your product, recording window, and social accounts to prepare a video and post for each network.",
+    "groups": []
+  },
+  "home": [],
+  "seats": [
+    {
+      "id": "researcher",
+      "role": "builder",
+      "name": "Researcher",
+      "instructions": "Read the account's recent public posts on each selected network and note any visible reach metrics. Review the product folder for work shipped since those posts. Propose an angle grounded in shipped work that the account has not already covered.",
+      "uses": []
+    },
+    {
+      "id": "writer",
+      "role": "builder",
+      "name": "Writer",
+      "instructions": "Use the research angle to draft a post or thread for each selected network within its length limits. Give the Recorder a shot list and the Editor caption copy. Ground every claim in actions or results viewers can see in the app.",
+      "uses": []
+    },
+    {
+      "id": "recorder",
+      "role": "builder",
+      "name": "Recorder",
+      "instructions": "Record the specified window of the real app using the shot list. Size the window so the important UI is legible on a phone, capture without sound, and keep private data and notifications out of the takes.",
+      "uses": ["video.record-window"]
+    },
+    {
+      "id": "editor",
+      "role": "builder",
+      "name": "Editor",
+      "instructions": "Frame and trim the recorded takes, add readable captions and logo cards, and render a silent export for each selected network using its aspect ratio and duration requirements. Keep the relevant UI visible and pair each export with its draft post.",
+      "uses": ["video.edit", "video.render"]
+    },
+    {
+      "id": "reviewer",
+      "role": "reviewer",
+      "name": "Reviewer",
+      "instructions": "Review every frame for exposed private data, visual defects, and phone readability. Verify that each sentence in the draft and captions matches what the app shows. Return issues for correction and hand the reviewed exports and drafts to the person for approval and publication.",
+      "uses": ["design.polish-review", "design.slop-check"]
+    }
+  ],
+  "steps": [
+    {
+      "id": "product",
+      "title": "Product and recording window",
+      "questions": [
+        {
+          "id": "product-folder",
+          "kind": "folder",
+          "fills": "productFolder",
+          "label": "Product folder",
+          "required": true
+        },
+        {
+          "id": "app-window",
+          "kind": "text",
+          "fills": "appWindow",
+          "label": "App name and window title to record",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "social",
+      "title": "Social networks and account",
+      "questions": [
+        {
+          "id": "networks",
+          "kind": "text",
+          "fills": "networks",
+          "label": "Networks to post to (X, TikTok, Instagram). Separate multiple networks with commas.",
+          "required": true
+        },
+        {
+          "id": "account-handle",
+          "kind": "text",
+          "fills": "accountHandle",
+          "label": "Account handle for reading recent posts. Include the network beside each handle if they differ.",
+          "required": true
+        }
+      ]
+    }
+  ]
+}

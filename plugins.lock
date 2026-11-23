@@ -1,0 +1,10 @@
+{
+  "source": "https://github.com/PerkOS-xyz/PerkOS-Runtime-Plugins",
+  "plugins": {
+    "ffmpeg": "0.1.0",
+    "openscreen": "0.1.0",
+    "effectcraft": "0.1.0",
+    "impeccable": "0.1.0",
+    "remotion": "0.1.0"
+  }
+}

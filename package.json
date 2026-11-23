@@ -1,12 +1,14 @@
 {
   "name": "perkos-desk-social-video",
+  "version": "1.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "typecheck": "tsc --ignoreConfig --noEmit --allowJs --checkJs --strict --module nodenext --target es2022 --types node formats/formats.test.mjs",
-    "test": "node --test"
+    "typecheck": "node --check test/desk.test.cjs && tsc --noEmit --allowJs --checkJs --strict --module nodenext --target es2022 --types node tests/seat-skills.test.js formats/formats.test.mjs",
+    "test": "node --test test/desk.test.cjs tests/*.test.js formats/formats.test.mjs"
   },
   "devDependencies": {
-    "@types/node": "22.20.5",
-    "typescript": "6.0.3"
+    "@types/node": "^22.20.5",
+    "typescript": "^5.9.3"
   }
 }
