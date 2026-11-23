@@ -1,0 +1,27 @@
+# PerkOS Desk: Social Video
+
+A PerkOS Runtime desk template that turns a product's real screens into short videos and posts for X, TikTok, Instagram and other networks.
+
+## The team
+
+| Seat | Does |
+|---|---|
+| Researcher | Reads the account's recent posts and their reach, and the work shipped since, and proposes an angle that does not repeat them |
+| Writer | Writes the post or thread within each network's length |
+| Recorder | Records the real app in a window sized to read on a phone, with no sound |
+| Editor | Frames the takes, adds captions and logo cards, exports each network's format |
+| Reviewer | Checks privacy, that every sentence matches what the app shows, and every frame |
+| Person | Approves and publishes |
+
+## Layout
+
+```
+desk.json        Seats, steps and questions
+skills/          Rules each seat follows
+formats/         Size and length for each network (16:9, 9:16, 4:5)
+plugins.lock     The PerkOS Runtime plugin versions this desk was tested with
+```
+
+## Versions
+
+The desk is released with tags (`v1.0.0`). PerkOS Runtime installs a tagged version and the plugin versions in its lock.
