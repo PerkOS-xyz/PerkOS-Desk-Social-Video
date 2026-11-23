@@ -1,0 +1,28 @@
+{
+  "network": "tiktok",
+  "video": [
+    {
+      "placement": "post",
+      "aspectRatio": "9:16",
+      "widthPx": 1080,
+      "heightPx": 1920
+    }
+  ],
+  "videoLength": {
+    "maxSeconds": 600,
+    "scope": "Content Posting API upload ceiling. Creator publishing limits can be lower. The Media Transfer Guide documents 180 seconds for all creators.",
+    "verification": "verified"
+  },
+  "text": {
+    "maxCharacters": 2200,
+    "deskMaxCharacters": null,
+    "scope": "Direct Post API video caption",
+    "limitVerification": "verified",
+    "counting": "TikTok documents UTF-16 runes. Exact handling of surrogate pairs and combined emoji is unverified.",
+    "countingVerification": "unverified"
+  },
+  "threads": {
+    "supported": false,
+    "verification": "unverified"
+  }
+}
