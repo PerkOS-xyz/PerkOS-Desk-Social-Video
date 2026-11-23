@@ -1,0 +1,9 @@
+{
+  "name": "perkos-desk-social-video",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "typecheck": "node --check test/desk.test.cjs",
+    "test": "node --test"
+  }
+}
