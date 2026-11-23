@@ -1,0 +1,13 @@
+{
+  "name": "perkos-desk-social-video",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit --allowJs --checkJs --strict --module nodenext tests/seat-skills.test.js",
+    "test": "node --test tests/*.test.js"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "typescript": "^5.9.3"
+  }
+}
