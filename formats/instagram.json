@@ -1,0 +1,34 @@
+{
+  "network": "instagram",
+  "video": [
+    {
+      "placement": "reels",
+      "aspectRatio": "9:16",
+      "widthPx": 1080,
+      "heightPx": 1920
+    },
+    {
+      "placement": "feed",
+      "aspectRatio": "4:5",
+      "widthPx": 1080,
+      "heightPx": 1350
+    }
+  ],
+  "videoLength": {
+    "maxSeconds": 900,
+    "scope": "Instagram API Reel upload, including Reels shared to Feed",
+    "verification": "verified"
+  },
+  "text": {
+    "maxCharacters": 2200,
+    "deskMaxCharacters": null,
+    "scope": "Instagram API caption",
+    "limitVerification": "verified",
+    "counting": "The API counts caption characters. The Unicode counting unit and treatment of combined emoji are unverified.",
+    "countingVerification": "unverified"
+  },
+  "threads": {
+    "supported": false,
+    "verification": "unverified"
+  }
+}

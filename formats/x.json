@@ -1,0 +1,34 @@
+{
+  "network": "x",
+  "video": [
+    {
+      "placement": "post",
+      "aspectRatio": "16:9",
+      "widthPx": 1920,
+      "heightPx": 1080
+    },
+    {
+      "placement": "post",
+      "aspectRatio": "1:1",
+      "widthPx": 1080,
+      "heightPx": 1080
+    }
+  ],
+  "videoLength": {
+    "maxSeconds": 140,
+    "scope": "Standard web upload without a paid subscription",
+    "verification": "verified"
+  },
+  "text": {
+    "maxCharacters": 280,
+    "deskMaxCharacters": 260,
+    "scope": "Standard post, per post in a thread",
+    "limitVerification": "verified",
+    "counting": "Use twitter-text weighted length after NFC normalization. Most Latin characters weigh 1, emoji sequences and CJK characters weigh 2, and recognized URLs weigh 23.",
+    "countingVerification": "verified"
+  },
+  "threads": {
+    "supported": true,
+    "verification": "verified"
+  }
+}
