@@ -28,4 +28,4 @@ The desk is released with tags (`v1.0.0`). PerkOS Runtime installs a tagged vers
 
 `plugins.lock` is JSON. Its `source` is the [PerkOS Runtime Plugins repository](https://github.com/PerkOS-xyz/PerkOS-Runtime-Plugins), and `plugins` maps each plugin ID to one exact version. A pin such as `openscreen` at `0.1.0` refers to the upstream tag `openscreen@0.1.0`.
 
-The initial pins are provisional until the upstream releases are available for testing. When updating a pin, verify the new release and update its capability entry in `test/plugins-lock.test.cjs`. The coverage test checks each seat's `uses` entries against the pinned versions once `desk.json` exists.
+The initial pins and capability assignments are provisional until the upstream releases are available for testing. When updating a pin, verify the new release and update its capability entry in `tests/plugins-lock.test.js`. The coverage test runs with `npm test` and checks each seat's `uses` entries against the pinned versions once `desk.json` exists.
