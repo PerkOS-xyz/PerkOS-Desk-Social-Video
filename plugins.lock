@@ -1,20 +1,8 @@
 {
-  "format": 1,
-  "plugins": [
-    {
-      "id": "ffmpeg",
-      "version": "0.1.0",
-      "sha256": null
-    },
-    {
-      "id": "impeccable",
-      "version": "0.1.0",
-      "sha256": null
-    },
-    {
-      "id": "remotion",
-      "version": "0.1.0",
-      "sha256": null
-    }
-  ]
+  "source": "https://github.com/PerkOS-xyz/PerkOS-Runtime-Plugins",
+  "plugins": {
+    "ffmpeg": "0.1.0",
+    "impeccable": "0.1.0",
+    "remotion": "0.1.0"
+  }
 }

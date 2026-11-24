@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import test from 'node:test'
 import { checkLock, checkSeatCoverage, updateLock, verifyRelease } from '../scripts/plugins-lock.js'
+import { parsePluginsLock } from '../scripts/runtime-plugins-lock.js'
 
 const lockUrl = new URL('../plugins.lock', import.meta.url)
 const deskUrl = new URL('../desk.json', import.meta.url)
@@ -18,9 +19,9 @@ const capabilitiesByRelease = new Map([
 ])
 
 function lockedCapabilities() {
-  const lock = JSON.parse(readFileSync(lockUrl, 'utf8'))
-  checkLock(lock)
-  return new Set(lock.plugins.flatMap(({ id, version }) => {
+  const { plugins } = checkLock(readFileSync(lockUrl, 'utf8'))
+  return new Set(Object.entries(plugins).flatMap(([id, pin]) => {
+    const version = typeof pin === 'string' ? pin : pin.version
     const release = `${id}@${version}`
     const capabilities = capabilitiesByRelease.get(release)
     assert.ok(capabilities, `Missing capability entry for ${release}`)
@@ -49,20 +50,30 @@ test('locked plugins cover every seat capability', () => {
   checkSeatCoverage(seats, lockedCapabilities())
 })
 
-const pin = { id: 'ffmpeg', version: '0.1.0', sha256: null }
-const fixtureLock = { format: 1, plugins: [pin] }
+const source = 'https://github.com/PerkOS-xyz/PerkOS-Runtime-Plugins'
+const pin = { version: '0.1.0' }
+const fixtureLock = JSON.stringify({ source, plugins: { ffmpeg: pin.version } })
 
 test('development accepts pending digests and release requires complete digests', () => {
   checkLock(fixtureLock)
   assert.throws(() => checkLock(fixtureLock, { release: true }), /Pending plugin digests: ffmpeg@0\.1\.0/)
-  checkLock({ format: 1, plugins: [{ ...pin, sha256: 'a'.repeat(64) }] }, { release: true })
+  const verified = { ...pin, sha256: 'a'.repeat(64) }
+  checkLock(JSON.stringify({ source, plugins: { ffmpeg: verified } }), { release: true })
+  assert.throws(() => checkLock(JSON.stringify({
+    source, plugins: { ffmpeg: verified, remotion: pin.version },
+  }), { release: true }), /Pending plugin digests: remotion@0\.1\.0/)
 })
 
-test('lock validation rejects duplicate IDs, ranges, and malformed digests', () => {
-  assert.throws(() => checkLock({ ...fixtureLock, plugins: [pin, { ...pin, version: '0.2.0' }] }), /Duplicate plugin ID/)
-  assert.throws(() => checkLock({ ...fixtureLock, plugins: [{ ...pin, version: '^0.1.0' }] }), /exact version/)
-  for (const sha256 of [undefined, '', 'a'.repeat(63), 'A'.repeat(64)]) {
-    assert.throws(() => checkLock({ ...fixtureLock, plugins: [{ ...pin, sha256 }] }), /Invalid SHA-256/)
+test('lock validation rejects divergent schemas, duplicate IDs, ranges, and malformed digests', () => {
+  const plugins = [{ id: 'ffmpeg', ...pin, sha256: 'a'.repeat(64) }]
+  assert.throws(() => checkLock(JSON.stringify({ format: 1, plugins })), /lock\.source/)
+  assert.throws(() => checkLock(JSON.stringify({ source, plugins })), /lock\.plugins/)
+  assert.throws(() => checkLock(fixtureLock.replace('"ffmpeg":', '"ffm\\u0070eg":"0.2.0","ffmpeg":')),
+    /repeated key "ffmpeg"/)
+  assert.throws(() => checkLock(fixtureLock.replace('0.1.0', '^0.1.0')), /semantic version/)
+  for (const sha256 of [undefined, null, '', 'a'.repeat(63), 'A'.repeat(64)]) {
+    const json = JSON.stringify({ source, plugins: { ffmpeg: { ...pin, sha256 } } })
+    assert.throws(() => checkLock(json), /lock\.plugins\.ffmpeg\.sha256/)
   }
 })
 
@@ -78,13 +89,14 @@ test('update hashes the plugin.zip bytes from each exact release', async () => {
       ],
     })
   }
-  const lock = { ...fixtureLock, plugins: [pin, { ...pin, id: 'effectcraft' }] }
-  const updated = await updateLock(lock, fetchRelease)
+  const lock = { source, plugins: { ffmpeg: pin.version, effectcraft: pin.version } }
+  const updated = await updateLock(JSON.stringify(lock), fetchRelease)
   const base = 'https://api.github.com/repos/PerkOS-xyz/PerkOS-Runtime-Plugins/releases/tags/'
   assert.deepEqual(requests, [base + 'ffmpeg%400.1.0', archiveUrl, base + 'effectcraft%400.1.0', archiveUrl])
-  assert.deepEqual(updated.plugins, lock.plugins.map((entry) => ({
-    ...entry, sha256: 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad',
-  })))
+  const verified = { ...pin, sha256: 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad' }
+  const expected = { source, plugins: { ffmpeg: verified, effectcraft: verified } }
+  assert.deepEqual(JSON.parse(updated), expected)
+  assert.deepEqual(parsePluginsLock(updated), expected)
   checkLock(updated, { release: true })
 })
 
@@ -100,7 +112,7 @@ test('release verification checks the digest, manifest identity and actual archi
   t.after(() => rmSync(directory, { recursive: true, force: true }))
   const archiveUrl = 'https://example.test/plugin.zip'
   const seats = [{ id: 'editor', uses: ['video.trim'] }]
-  const manifest = { id: pin.id, version: pin.version, capabilities: ['video.trim'] }
+  const manifest = { id: 'ffmpeg', version: pin.version, capabilities: ['video.trim'] }
   let archive
   const fetchRelease = async (url) => url === archiveUrl ? new Response(archive) :
     Response.json({ assets: [{ name: 'plugin.zip', browser_download_url: archiveUrl }] })

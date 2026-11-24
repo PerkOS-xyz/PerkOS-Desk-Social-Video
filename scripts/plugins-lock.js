@@ -5,46 +5,27 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { promisify } from 'node:util'
+import { parsePluginsLock } from './runtime-plugins-lock.js'
 
 const lockFile = new URL('../plugins.lock', import.meta.url)
 const deskFile = new URL('../desk.json', import.meta.url)
 const run = promisify(execFile)
 const releasesUrl = 'https://api.github.com/repos/PerkOS-xyz/PerkOS-Runtime-Plugins/releases'
-const exactVersion = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/
 
-function isExactVersion(version) {
-  const match = typeof version === 'string' && exactVersion.exec(version)
-  return match && match[0] === version &&
-    !match[4]?.split('.').some((part) => /^0\d+$/.test(part))
-}
+export function checkLock(json, { release = false } = {}) {
+  const lock = parsePluginsLock(json)
+  const pins = Object.entries(lock.plugins)
+  if (!pins.length) throw new Error('plugins.lock must pin at least one plugin')
 
-export function checkLock(lock, { release = false } = {}) {
-  if (lock?.format !== 1 || !Array.isArray(lock.plugins) || !lock.plugins.length ||
-      Object.keys(lock).length !== 2) {
-    throw new Error('plugins.lock must contain format 1 and a nonempty plugins array')
-  }
-
-  const ids = new Set()
-  const pending = []
-  for (const pin of lock.plugins) {
-    if (typeof pin?.id !== 'string' || !/^[a-z0-9][a-z0-9-]*$/.test(pin.id) ||
-        pin.id.trim() !== pin.id || !isExactVersion(pin.version) || Object.keys(pin).length !== 3) {
-      throw new Error('Each plugin pin must contain an id, an exact version and a sha256 field')
-    }
-    if (ids.has(pin.id)) throw new Error('Duplicate plugin ID: ' + pin.id)
-    ids.add(pin.id)
-    const tag = pin.id + '@' + pin.version
-    if (pin.sha256 === null) {
-      pending.push(tag)
-    } else if (typeof pin.sha256 !== 'string' || pin.sha256.length !== 64 || /[^a-f0-9]/.test(pin.sha256)) {
-      throw new Error('Invalid SHA-256 digest for ' + tag)
+  if (release) {
+    const pending = pins.filter(([, pin]) => typeof pin === 'string')
+      .map(([id, version]) => id + '@' + version)
+    if (pending.length) {
+      throw new Error('Pending plugin digests: ' + pending.join(', ') +
+        '. Run npm run lock -- update once the releases are published.')
     }
   }
-
-  if (release && pending.length) {
-    throw new Error('Pending plugin digests: ' + pending.join(', ') +
-      '. Run npm run lock -- update once the releases are published.')
-  }
+  return lock
 }
 
 async function downloadArchive(tag, fetchRelease) {
@@ -64,15 +45,18 @@ async function downloadArchive(tag, fetchRelease) {
   return Buffer.from(await download.arrayBuffer())
 }
 
-export async function updateLock(lock, fetchRelease = fetch) {
-  checkLock(lock)
-  const plugins = []
-  for (const pin of lock.plugins) {
-    const archive = await downloadArchive(pin.id + '@' + pin.version, fetchRelease)
-    const hash = createHash('sha256').update(archive)
-    plugins.push({ ...pin, sha256: hash.digest('hex') })
+export async function updateLock(json, fetchRelease = fetch) {
+  const { source, plugins } = checkLock(json)
+  const updated = Object.create(null)
+  for (const [id, pin] of Object.entries(plugins)) {
+    const version = typeof pin === 'string' ? pin : pin.version
+    const archive = await downloadArchive(id + '@' + version, fetchRelease)
+    const sha256 = createHash('sha256').update(archive).digest('hex')
+    updated[id] = { version, sha256 }
   }
-  return { format: 1, plugins }
+  const result = JSON.stringify({ source, plugins: updated }, null, 2) + '\n'
+  checkLock(result, { release: true })
+  return result
 }
 
 export function checkSeatCoverage(seats, provided) {
@@ -82,14 +66,14 @@ export function checkSeatCoverage(seats, provided) {
   if (missing.length) throw new Error('Seat capabilities missing from locked plugins: ' + missing.join(', '))
 }
 
-export async function verifyRelease(lock, seats, fetchRelease = fetch) {
-  checkLock(lock, { release: true })
+export async function verifyRelease(json, seats, fetchRelease = fetch) {
+  const { plugins } = checkLock(json, { release: true })
   const provided = new Set()
   const directory = await mkdtemp(join(tmpdir(), 'perkos-plugin-'))
   const archivePath = join(directory, 'plugin.zip')
   try {
-    for (const pin of lock.plugins) {
-      const tag = pin.id + '@' + pin.version
+    for (const [id, pin] of Object.entries(plugins)) {
+      const tag = id + '@' + pin.version
       const archive = await downloadArchive(tag, fetchRelease)
       if (createHash('sha256').update(archive).digest('hex') !== pin.sha256) {
         throw new Error('SHA-256 digest mismatch for ' + tag)
@@ -102,7 +86,7 @@ export async function verifyRelease(lock, seats, fetchRelease = fetch) {
       } catch (error) {
         throw new Error('Could not read plugin.json for ' + tag + ': ' + error.message)
       }
-      if (manifest?.id !== pin.id || manifest.version !== pin.version ||
+      if (manifest?.id !== id || manifest.version !== pin.version ||
           !Array.isArray(manifest.capabilities) ||
           !manifest.capabilities.every((capability) => typeof capability === 'string')) {
         throw new Error('Invalid plugin.json identity or capabilities for ' + tag)
@@ -120,10 +104,10 @@ async function main(args) {
   if (!['check', 'check --release', 'update'].includes(command)) {
     throw new Error('Usage: npm run lock -- <check [--release]|update>')
   }
-  const lock = JSON.parse(await readFile(lockFile, 'utf8'))
+  const lock = await readFile(lockFile, 'utf8')
   if (command === 'update') {
     const updated = await updateLock(lock)
-    await writeFile(lockFile, JSON.stringify(updated, null, 2) + '\n')
+    await writeFile(lockFile, updated)
   } else if (command === 'check --release') {
     const { seats } = JSON.parse(await readFile(deskFile, 'utf8'))
     await verifyRelease(lock, seats)

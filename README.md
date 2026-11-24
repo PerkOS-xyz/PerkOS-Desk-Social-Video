@@ -26,6 +26,8 @@ plugins.lock     The PerkOS Runtime plugin versions this desk was tested with
 
 PerkOS Runtime installs the tagged desk version and its pinned plugins. The first release is `v0.1.0`.
 
-`plugins.lock` uses Runtime format 1. Each entry pins one plugin ID, an exact version, and the SHA-256 digest of its `plugin.zip`. A pin such as `openscreen` at `0.1.0` refers to the `openscreen@0.1.0` tag in the [PerkOS Runtime Plugins repository](https://github.com/PerkOS-xyz/PerkOS-Runtime-Plugins).
+`plugins.lock` is strict JSON with a `source` set to the PerkOS Runtime Plugins repository URL and a `plugins` object keyed by unique plugin IDs. For example, an `ffmpeg` pin at `0.1.0` refers to the `ffmpeg@0.1.0` release. [PerkOS Runtime Plugins](https://github.com/PerkOS-xyz/PerkOS-Runtime-Plugins)
 
-A `null` digest marks a pending pin during development. Once the pinned releases have a `plugin.zip`, run `npm run lock -- update` to fill their digests. When changing a pin, verify its capabilities and update the corresponding entry in `tests/plugins-lock.test.js`. Run `npm run release:check` before tagging to verify the complete lock, seat capabilities, desk manifest, seat skills, and network formats.
+An exact version string marks a pending pin. Once the pinned releases have a `plugin.zip`, run `npm run lock -- update` to replace each string with an object containing `version` and a 64-character lowercase hexadecimal `sha256` of the archive. The lock tool validates both forms with the pinned Runtime resolver parser. [Runtime parser at f671272](https://github.com/PerkOS-xyz/PerkOS-Runtime/blob/f671272386583f1fb635dcb77c7716645e8be59f/src/shared/plugin-api.ts)
+
+When changing a pin, verify its capabilities and update the corresponding entry in `tests/plugins-lock.test.js`. Run `npm run release:check` before tagging. It requires a digest for every pin and verifies the archive digests, seat capabilities, desk manifest, seat skills, and network formats.
