@@ -1,7 +1,7 @@
 {
   "id": "social-video",
   "format": 1,
-  "version": "1.0.0",
+  "version": "0.1.0",
   "tier": "public",
   "name": "Social Video",
   "description": "Turn real product screens into short videos and posts for X, TikTok, and Instagram.",

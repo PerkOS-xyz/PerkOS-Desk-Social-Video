@@ -10,6 +10,7 @@ function assertText(value) {
 test('desk has the required format 1 metadata', () => {
   assert.equal(desk.format, 1);
   assert.equal(desk.tier, 'public');
+  assert.equal(desk.version, require('../package.json').version);
   for (const key of ['id', 'version', 'name', 'description']) {
     assertText(desk[key]);
   }

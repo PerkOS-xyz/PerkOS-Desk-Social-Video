@@ -1,10 +1,30 @@
 {
-  "source": "https://github.com/PerkOS-xyz/PerkOS-Runtime-Plugins",
-  "plugins": {
-    "ffmpeg": "0.1.0",
-    "openscreen": "0.1.0",
-    "effectcraft": "0.1.0",
-    "impeccable": "0.1.0",
-    "remotion": "0.1.0"
-  }
+  "format": 1,
+  "plugins": [
+    {
+      "id": "ffmpeg",
+      "version": "0.1.0",
+      "sha256": null
+    },
+    {
+      "id": "openscreen",
+      "version": "0.1.0",
+      "sha256": null
+    },
+    {
+      "id": "effectcraft",
+      "version": "0.1.0",
+      "sha256": null
+    },
+    {
+      "id": "impeccable",
+      "version": "0.1.0",
+      "sha256": null
+    },
+    {
+      "id": "remotion",
+      "version": "0.1.0",
+      "sha256": null
+    }
+  ]
 }
