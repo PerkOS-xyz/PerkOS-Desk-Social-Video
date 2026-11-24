@@ -28,8 +28,8 @@ test('desk defines the five seats with their roles and capabilities', () => {
   assert.deepEqual(seats, [
     ['researcher', 'Researcher', 'builder', []],
     ['writer', 'Writer', 'builder', []],
-    ['recorder', 'Recorder', 'builder', ['video.record-window']],
-    ['editor', 'Editor', 'builder', ['video.edit', 'video.render']],
+    ['recorder', 'Recorder', 'builder', []],
+    ['editor', 'Editor', 'builder', ['video.trim', 'video.captions', 'video.render-composition']],
     ['reviewer', 'Reviewer', 'reviewer', ['design.polish-review', 'design.slop-check']],
   ]);
 });

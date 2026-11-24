@@ -1,16 +1,18 @@
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
+import { execFileSync } from 'node:child_process'
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import test from 'node:test'
-import { checkLock, updateLock } from '../scripts/plugins-lock.js'
+import { checkLock, checkSeatCoverage, updateLock, verifyRelease } from '../scripts/plugins-lock.js'
 
 const lockUrl = new URL('../plugins.lock', import.meta.url)
 const deskUrl = new URL('../desk.json', import.meta.url)
 
-// Capability declarations for the pinned versions. OpenScreen is pending upstream.
+// Development coverage uses upstream source while release archives are pending.
+// https://github.com/PerkOS-xyz/PerkOS-Runtime-Plugins/tree/0ac1610e8d2090c6a1674015bf40addbbb753f52
 const capabilitiesByRelease = new Map([
   ['ffmpeg@0.1.0', ['video.probe', 'video.trim', 'video.scale', 'video.strip-audio', 'video.concat', 'video.captions', 'video.gif']],
-  ['openscreen@0.1.0', ['video.record-window']],
-  ['effectcraft@0.1.0', ['video.edit', 'video.render']],
   ['impeccable@0.1.0', ['design.polish-review', 'design.slop-check', 'design.critique']],
   ['remotion@0.1.0', ['video.render-composition']],
 ])
@@ -26,35 +28,25 @@ function lockedCapabilities() {
   }))
 }
 
-function assertSeatCoverage(seats) {
-  assert.ok(Array.isArray(seats) && seats.length > 0, 'desk.json must list seats')
-  const provided = lockedCapabilities()
-  const missing = seats.flatMap(({ id, uses }) => {
-    assert.ok(Array.isArray(uses), `Seat ${id} must list its capabilities in uses`)
-    return uses.filter((capability) => !provided.has(capability))
-      .map((capability) => `${id}: ${capability}`)
-  })
-  assert.deepEqual(missing, [], 'Seat capabilities missing from locked plugins')
-}
-
 test('plugin lock pins releases with known capability entries', () => {
   lockedCapabilities()
 })
 
 test('coverage accepts provided capabilities and reports a missing capability by seat', () => {
-  const recorder = { id: 'recorder', uses: ['video.record-window'] }
-  const editor = { id: 'editor', uses: ['video.edit', 'video.render'] }
+  const recorder = { id: 'recorder', uses: [] }
+  const editor = { id: 'editor', uses: ['video.trim', 'video.render-composition'] }
+  const provided = lockedCapabilities()
 
-  assertSeatCoverage([recorder, editor])
+  checkSeatCoverage([recorder, editor], provided)
   assert.throws(
-    () => assertSeatCoverage([recorder, { ...editor, uses: [...editor.uses, 'fixture.missing'] }]),
-    { actual: ['editor: fixture.missing'], expected: [] }
+    () => checkSeatCoverage([recorder, { ...editor, uses: [...editor.uses, 'fixture.missing'] }], provided),
+    /editor: fixture\.missing/
   )
 })
 
 test('locked plugins cover every seat capability', () => {
   const { seats } = JSON.parse(readFileSync(deskUrl, 'utf8'))
-  assertSeatCoverage(seats)
+  checkSeatCoverage(seats, lockedCapabilities())
 })
 
 const pin = { id: 'ffmpeg', version: '0.1.0', sha256: null }
@@ -101,4 +93,38 @@ test('update identifies a missing release or plugin.zip', async () => {
     /GitHub release ffmpeg@0\.1\.0 does not exist yet/)
   await assert.rejects(updateLock(fixtureLock, async () => Response.json({ assets: [] })),
     /GitHub release ffmpeg@0\.1\.0 has no plugin\.zip asset/)
+})
+
+test('release verification checks the digest, manifest identity and actual archive capabilities', async (t) => {
+  const directory = mkdtempSync(join(tmpdir(), 'perkos-lock-test-'))
+  t.after(() => rmSync(directory, { recursive: true, force: true }))
+  const archiveUrl = 'https://example.test/plugin.zip'
+  const seats = [{ id: 'editor', uses: ['video.trim'] }]
+  const manifest = { id: pin.id, version: pin.version, capabilities: ['video.trim'] }
+  let archive
+  const fetchRelease = async (url) => url === archiveUrl ? new Response(archive) :
+    Response.json({ assets: [{ name: 'plugin.zip', browser_download_url: archiveUrl }] })
+  function pack(declaration) {
+    const path = join(directory, 'plugin.zip')
+    rmSync(path, { force: true })
+    writeFileSync(join(directory, 'plugin.json'), JSON.stringify(declaration))
+    execFileSync('zip', ['-q', path, 'plugin.json'], { cwd: directory })
+    archive = readFileSync(path)
+  }
+
+  await assert.rejects(verifyRelease(fixtureLock, seats, fetchRelease), /Pending plugin digests/)
+  pack(manifest)
+  const locked = await updateLock(fixtureLock, fetchRelease)
+  await verifyRelease(locked, seats, fetchRelease)
+  await assert.rejects(verifyRelease(locked, seats, async () => new Response(null, { status: 404 })),
+    /GitHub release ffmpeg@0\.1\.0 does not exist yet/)
+
+  pack({ ...manifest, capabilities: ['video.probe'] })
+  await assert.rejects(verifyRelease(locked, seats, fetchRelease), /SHA-256 digest mismatch/)
+  await assert.rejects(verifyRelease(await updateLock(fixtureLock, fetchRelease), seats, fetchRelease),
+    /editor: video\.trim/)
+
+  pack({ ...manifest, version: '0.2.0' })
+  await assert.rejects(verifyRelease(await updateLock(fixtureLock, fetchRelease), seats, fetchRelease),
+    /Invalid plugin\.json identity or capabilities/)
 })
