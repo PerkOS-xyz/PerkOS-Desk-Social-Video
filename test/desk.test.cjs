@@ -10,6 +10,7 @@ function assertText(value) {
 test('desk has the required format 1 metadata', () => {
   assert.equal(desk.format, 1);
   assert.equal(desk.tier, 'public');
+  assert.equal(desk.version, require('../package.json').version);
   for (const key of ['id', 'version', 'name', 'description']) {
     assertText(desk[key]);
   }
@@ -27,8 +28,8 @@ test('desk defines the five seats with their roles and capabilities', () => {
   assert.deepEqual(seats, [
     ['researcher', 'Researcher', 'builder', []],
     ['writer', 'Writer', 'builder', []],
-    ['recorder', 'Recorder', 'builder', ['video.record-window']],
-    ['editor', 'Editor', 'builder', ['video.edit', 'video.render']],
+    ['recorder', 'Recorder', 'builder', []],
+    ['editor', 'Editor', 'builder', ['video.trim', 'video.captions', 'video.render-composition']],
     ['reviewer', 'Reviewer', 'reviewer', ['design.polish-review', 'design.slop-check']],
   ]);
 });

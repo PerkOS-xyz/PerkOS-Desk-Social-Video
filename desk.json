@@ -1,7 +1,7 @@
 {
   "id": "social-video",
   "format": 1,
-  "version": "1.0.0",
+  "version": "0.1.0",
   "tier": "public",
   "name": "Social Video",
   "description": "Turn real product screens into short videos and posts for X, TikTok, and Instagram.",
@@ -29,15 +29,15 @@
       "id": "recorder",
       "role": "builder",
       "name": "Recorder",
-      "instructions": "Record the specified window of the real app using the shot list. Size the window so the important UI is legible on a phone, capture without sound, and keep private data and notifications out of the takes.",
-      "uses": ["video.record-window"]
+      "instructions": "Use the operating system’s screen recorder to capture the specified window of the real app using the shot list. Size the window so the important UI is legible on a phone, capture without sound, and keep private data and notifications out of the takes.",
+      "uses": []
     },
     {
       "id": "editor",
       "role": "builder",
       "name": "Editor",
       "instructions": "Frame and trim the recorded takes, add readable captions and logo cards, and render a silent export for each selected network using its aspect ratio and duration requirements. Keep the relevant UI visible and pair each export with its draft post.",
-      "uses": ["video.edit", "video.render"]
+      "uses": ["video.trim", "video.captions", "video.render-composition"]
     },
     {
       "id": "reviewer",
